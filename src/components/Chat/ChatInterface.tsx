@@ -37,14 +37,6 @@ interface Message {
   time: Date;
 }
 
-const AI_RESPONSES = [
-  (query: string) =>
-    `I've analyzed your request regarding "${query.slice(0, 40)}..."\n\nHere's a structured breakdown of key insights based on current pharma GTM best practices. I can dive deeper into any specific area — HCP engagement, patient support pathways, or commercial operations.`,
-  () =>
-    `Great question. Based on current field data and engagement patterns, here are the top recommendations:\n\n1. **Prioritize Tier 1 HCPs** in your territory with tailored messaging\n2. **Align patient support** touchpoints with the prescription journey\n3. **Leverage digital channels** for non-personal promotion\n\nWant me to elaborate on any of these?`,
-  () =>
-    `I can help with that. Let me pull together the relevant data points...\n\nFor your commercial team, the most impactful levers right now are:\n- Segmentation refinement based on prescribing behavior\n- Omnichannel orchestration across rep + digital\n- Real-time field force analytics\n\nShall I draft a detailed action plan?`,
-];
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("en-US", {
@@ -64,6 +56,8 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose }: ChatInter
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeChat, setActiveChat] = useState<number | null>(null);
+  const [contextDocs, setContextDocs] = useState<string[]>([]);
+  const [contextOpen, setContextOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -86,36 +80,85 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose }: ChatInter
     autoResize();
   }, [input]);
 
-  const simulateResponse = useCallback((userMsg: string) => {
-    setIsTyping(true);
-    const delay = 800 + Math.random() * 800;
-    const pick = AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)];
+  const streamResponse = useCallback(async (userMsg: string, history: Message[]) => {
+    const streamId = Date.now() + 1;
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg,
+          history: history.slice(-10).map((m) => ({
+            role: m.role === 'ai' ? 'assistant' : 'user',
+            content: m.content,
+          })),
+        }),
+      });
+
+      if (!res.ok || !res.body) throw new Error('Request failed');
+
       setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          role: "ai",
-          content: pick(userMsg),
-          time: new Date(),
-        },
-      ]);
-    }, delay);
+      setMessages((prev) => [...prev, { id: streamId, role: 'ai', content: '', time: new Date() }]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+      let lineBuffer = '';
+      let headerParsed = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const raw = decoder.decode(value, { stream: true });
+
+        if (!headerParsed) {
+          lineBuffer += raw;
+          const nlIdx = lineBuffer.indexOf('\n');
+          if (nlIdx !== -1) {
+            headerParsed = true;
+            const header = lineBuffer.slice(0, nlIdx).trim();
+            const rest = lineBuffer.slice(nlIdx + 1);
+            try {
+              const { docs } = JSON.parse(header) as { docs: string[] };
+              if (docs?.length) {
+                setContextDocs(docs);
+                setContextOpen(true);
+              }
+            } catch {}
+            if (rest) {
+              accumulated += rest;
+              const snap = accumulated;
+              setMessages((prev) => prev.map((m) => m.id === streamId ? { ...m, content: snap } : m));
+            }
+          }
+        } else {
+          accumulated += raw;
+          const snap = accumulated;
+          setMessages((prev) => prev.map((m) => m.id === streamId ? { ...m, content: snap } : m));
+        }
+      }
+    } catch {
+      setIsTyping(false);
+      setMessages((prev) => [...prev, {
+        id: streamId,
+        role: 'ai',
+        content: 'Something went wrong. Please try again.',
+        time: new Date(),
+      }]);
+    }
   }, []);
 
   const send = useCallback(() => {
     const text = input.trim();
     if (!text || text.length > MAX_CHARS) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: "user", content: text, time: new Date() },
-    ]);
-    setInput("");
-    simulateResponse(text);
-  }, [input, simulateResponse]);
+    const userMsg: Message = { id: Date.now(), role: 'user', content: text, time: new Date() };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput('');
+    setIsTyping(true);
+    streamResponse(text, messages);
+  }, [input, messages, streamResponse]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -184,9 +227,54 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose }: ChatInter
         </div>
       </aside>
 
+      {/* Context backdrop (mobile) */}
+      {contextOpen && (
+        <div className={styles.contextBackdrop} onClick={() => setContextOpen(false)} />
+      )}
+
+      {/* Right context sidebar */}
+      <aside className={`${styles.contextSidebar} ${contextOpen ? styles.contextSidebarOpen : ""}`}>
+        <div className={styles.contextHeader}>
+          <span className={styles.contextTitle}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Sources
+            <span className={styles.contextCount}>{contextDocs.length}</span>
+          </span>
+          <button className={styles.contextClose} onClick={() => setContextOpen(false)} aria-label="Close sources">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div className={styles.contextList}>
+          {contextDocs.map((doc, i) => (
+            <div key={i} className={styles.contextChunk}>
+              <span className={styles.contextChunkNum}>{i + 1}</span>
+              <p className={styles.contextChunkText}>{doc}</p>
+            </div>
+          ))}
+        </div>
+      </aside>
+
       {/* Main */}
-      <main className={styles.main}>
+      <main className={`${styles.main} ${contextOpen ? styles.mainShifted : ""}`}>
         <div className={styles.messages}>
+          {contextDocs.length > 0 && (
+            <button
+              className={`${styles.sourcesToggle} ${contextOpen ? styles.sourcesToggleActive : ""}`}
+              onClick={() => setContextOpen((o) => !o)}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              {contextDocs.length} source{contextDocs.length !== 1 ? "s" : ""}
+            </button>
+          )}
           <div className={styles.messagesInner}>
             {messages.length === 0 ? (
               <div className={styles.welcome}>

@@ -184,12 +184,180 @@
   letter-spacing: $letter-spacing-wide;
 }
 
+// ─── Right context sidebar ───────────────────────────────────────────────────
+.contextBackdrop {
+  display: none;
+
+  @include mobile {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 9, 23, 0.45);
+    z-index: $z-overlay - 1;
+  }
+}
+
+.contextSidebar {
+  position: fixed;
+  top: $nav-height;
+  right: 0;
+  bottom: 0;
+  width: $context-sidebar-width;
+  z-index: $z-overlay;
+  @include flex(column, stretch, flex-start);
+  background: rgba(247, 245, 252, 0.96);
+  border-left: 1px solid $color-border;
+  @include glass(12px);
+  box-shadow: $shadow-xl;
+  transform: translateX(100%);
+  transition: transform $transition-slow;
+
+  @include mobile {
+    width: min(#{$context-sidebar-width}, 88vw);
+  }
+}
+
+.contextSidebarOpen {
+  transform: translateX(0);
+}
+
+.contextHeader {
+  @include flex(row, center, space-between);
+  padding: $space-4 $space-5;
+  border-bottom: 1px solid $color-border;
+  flex-shrink: 0;
+}
+
+.contextTitle {
+  @include flex(row, center, flex-start, $space-2);
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-widest;
+  text-transform: uppercase;
+  color: $color-text-secondary;
+}
+
+.contextCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: $radius-full;
+  background: $color-accent;
+  color: $color-text-inverse;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.contextClose {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-sm;
+  color: $color-text-muted;
+  transition: background $transition-base, color $transition-base;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-text-primary;
+  }
+}
+
+.contextList {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-4 $space-4;
+  @include flex(column, stretch, flex-start, $space-3);
+  @include scrollbar-thin;
+}
+
+.contextChunk {
+  @include flex(row, flex-start, flex-start, $space-3);
+  padding: $space-3 $space-4;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-xs;
+}
+
+.contextChunkNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-full;
+  background: $color-accent-light;
+  color: $color-accent;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+  font-family: $font-mono;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.contextChunkText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: $line-height-relaxed;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  -webkit-box-orient: vertical;
+}
+
+// ─── Sources toggle button ────────────────────────────────────────────────────
+.sourcesToggle {
+  @include button-reset;
+  @include flex(row, center, center, $space-2);
+  position: absolute;
+  top: $space-4;
+  right: $space-5;
+  z-index: $z-raised;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
+  font-family: $font-inter;
+  font-weight: $font-weight-medium;
+  box-shadow: $shadow-sm;
+  transition: all $transition-base;
+
+  &:hover {
+    border-color: $color-accent;
+    color: $color-accent;
+    box-shadow: $shadow-md;
+  }
+
+  &.sourcesToggleActive {
+    background: $color-accent;
+    border-color: $color-accent;
+    color: $color-text-inverse;
+    box-shadow: $shadow-md;
+  }
+}
+
 // ─── Main Chat Area ───────────────────────────────────────────────────────────
 .main {
   @include flex(column, stretch, flex-start);
   overflow: hidden;
   background: $color-bg;
   position: relative;
+  transition: margin-right $transition-slow;
+}
+
+.mainShifted {
+  @media (min-width: 768px) {
+    margin-right: $context-sidebar-width;
+  }
 }
 
 // ─── Messages ────────────────────────────────────────────────────────────────
