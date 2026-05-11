@@ -49,9 +49,10 @@ function formatTime(date: Date): string {
 interface ChatInterfaceProps {
   sidebarOpen: boolean;
   onSidebarClose: () => void;
+  exportRef: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function ChatInterface({ sidebarOpen, onSidebarClose }: ChatInterfaceProps) {
+export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -79,6 +80,25 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose }: ChatInter
   useEffect(() => {
     autoResize();
   }, [input]);
+
+  useEffect(() => {
+    exportRef.current = () => {
+      if (messages.length === 0) return;
+      const lines = messages.map((m) => {
+        const role = m.role === 'user' ? 'You' : 'Ather';
+        const time = formatTime(m.time);
+        return `[${time}] ${role}:\n${m.content}`;
+      });
+      const text = `Ather Chat Export\n${new Date().toLocaleString()}\n${'─'.repeat(40)}\n\n${lines.join('\n\n')}`;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ather-chat-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+  }, [messages, exportRef]);
 
   const streamResponse = useCallback(async (userMsg: string, history: Message[]) => {
     const streamId = Date.now() + 1;

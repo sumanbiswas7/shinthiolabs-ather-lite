@@ -5,9 +5,10 @@ import styles from "./Navbar.module.scss";
 
 interface NavbarProps {
   onMenuToggle: () => void;
+  onExport: () => void;
 }
 
-export default function Navbar({ onMenuToggle }: NavbarProps) {
+export default function Navbar({ onMenuToggle, onExport }: NavbarProps) {
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [uploadLabel, setUploadLabel] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,10 +82,11 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
             </svg>
           )}
         </button>
-        <button className={styles.iconBtn} title="Search conversations">
+        <button className={styles.iconBtn} title="Export chat" onClick={onExport}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
         </button>
       </div>
