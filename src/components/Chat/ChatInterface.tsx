@@ -10,7 +10,7 @@ const MAX_CHARS = 4000
 
 const SUGGESTIONS = [
   'What are the side effects of metformin?',
-  'Can a pregnant take metformin?',
+  'Is Amlodipine 15g per day dose good?'
 ] as const
 
 interface ChatInterfaceProps {
@@ -115,10 +115,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
         </div>
 
         <div className={styles.sidebarFooter}>
-          <div className={styles.modelBadge}>
-            <span />
-            Ather Lite
-          </div>
+          <div className={styles.modelName}>GPT-4o mini</div>
         </div>
       </aside>
 

@@ -163,6 +163,17 @@
   }
 }
 
+.modelName {
+  font-size: 10px;
+  font-family: $font-mono;
+  color: $color-text-muted;
+  background: $color-surface-alt;
+  border: 1px solid $color-border;
+  border-radius: $radius-sm;
+  padding: 2px $space-2;
+  letter-spacing: 0.01em;
+}
+
 // ─── Mobile header ───────────────────────────────────────────────────────────
 .mobileHeader {
   display: none;
