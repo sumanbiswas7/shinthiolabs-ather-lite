@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
 
   // RAG: embed query and retrieve relevant chunks from Chroma
   let docs: string[] = []
+  let scores: number[] = []
   let contextBlock = ''
   try {
     const queryEmbedding = await getQueryEmbedding(openai, message)
@@ -68,9 +69,10 @@ export async function POST(req: NextRequest) {
       nResults: 4,
     })
     docs = (results.documents?.[0]?.filter(Boolean) ?? []) as string[]
+    // Convert L2 distances to 0–100 similarity scores (unit vectors: range [0,2])
+    scores = (results.distances?.[0] ?? []).map((d) => Math.round((1 - d / 2) * 100))
     if (docs.length > 0) {
       contextBlock = `\n\nRelevant context from uploaded documents:\n${docs.map((d, i) => `[${i + 1}] ${d}`).join('\n\n')}`
-      console.log(`[chat] Retrieved ${docs.length} chunks from Chroma`)
     }
   } catch (err) {
     console.warn('[chat] Chroma unavailable, proceeding without context:', err)
@@ -93,8 +95,8 @@ export async function POST(req: NextRequest) {
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        // First line: JSON metadata (docs for the sources panel), always present
-        controller.enqueue(encoder.encode(JSON.stringify({ docs }) + '\n'))
+        // First line: JSON metadata (docs + scores for the sources panel)
+        controller.enqueue(encoder.encode(JSON.stringify({ docs, scores }) + '\n'))
         // Remaining bytes: raw token stream
         for await (const chunk of stream) {
           const text = chunk.choices[0]?.delta?.content ?? ''

@@ -85,7 +85,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
   const [isTyping, setIsTyping] = useState(false);
   const [activeChat, setActiveChat] = useState<number | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>(INITIAL_HISTORY);
-  const [contextDocs, setContextDocs] = useState<string[]>([]);
+  const [contextChunks, setContextChunks] = useState<{ text: string; score: number }[]>([]);
   const [contextOpen, setContextOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -235,9 +235,9 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
             const header = lineBuffer.slice(0, nlIdx).trim();
             const rest = lineBuffer.slice(nlIdx + 1);
             try {
-              const { docs } = JSON.parse(header) as { docs: string[] };
+              const { docs, scores } = JSON.parse(header) as { docs: string[]; scores: number[] };
               if (docs?.length) {
-                setContextDocs(docs);
+                setContextChunks(docs.map((text, i) => ({ text, score: scores?.[i] ?? 0 })));
                 setContextOpen(true);
               }
             } catch {}
@@ -329,7 +329,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
             onClick={() => {
               setMessages([]);
               setActiveChat(null);
-              setContextDocs([]);
+              setContextChunks([]);
               setContextOpen(false);
               onSidebarClose();
             }}
@@ -346,7 +346,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
             <button
               key={item.id}
               className={`${styles.historyItem} ${activeChat === item.id ? styles.active : ""}`}
-              onClick={() => { setActiveChat(item.id); setMessages(item.messages); setContextDocs([]); setContextOpen(false); }}
+              onClick={() => { setActiveChat(item.id); setMessages(item.messages); setContextChunks([]); setContextOpen(false); }}
             >
               <span className={styles.historyIcon}>
                 <svg
@@ -390,7 +390,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
               <polyline points="14 2 14 8 20 8"/>
             </svg>
             Sources
-            <span className={styles.contextCount}>{contextDocs.length}</span>
+            <span className={styles.contextCount}>{contextChunks.length}</span>
           </span>
           <button className={styles.contextClose} onClick={() => setContextOpen(false)} aria-label="Close sources">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -400,10 +400,15 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
           </button>
         </div>
         <div className={styles.contextList}>
-          {contextDocs.map((doc, i) => (
+          {contextChunks.map((chunk, i) => (
             <div key={i} className={styles.contextChunk}>
               <span className={styles.contextChunkNum}>{i + 1}</span>
-              <p className={styles.contextChunkText}>{doc}</p>
+              <div className={styles.contextChunkBody}>
+                <p className={styles.contextChunkText}>{chunk.text}</p>
+                <span className={`${styles.scoreTag} ${chunk.score >= 80 ? styles.scoreHigh : chunk.score >= 60 ? styles.scoreMid : styles.scoreLow}`}>
+                  {chunk.score}% match
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -412,7 +417,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
       {/* Main */}
       <main className={`${styles.main} ${contextOpen ? styles.mainShifted : ""}`}>
         <div className={styles.messages}>
-          {contextDocs.length > 0 && (
+          {contextChunks.length > 0 && (
             <button
               className={`${styles.sourcesToggle} ${contextOpen ? styles.sourcesToggleActive : ""}`}
               onClick={() => setContextOpen((o) => !o)}
@@ -421,7 +426,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              {contextDocs.length} source{contextDocs.length !== 1 ? "s" : ""}
+              {contextChunks.length} source{contextChunks.length !== 1 ? "s" : ""}
             </button>
           )}
           <div className={styles.messagesInner}>

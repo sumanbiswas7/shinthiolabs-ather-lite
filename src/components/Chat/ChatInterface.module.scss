@@ -226,7 +226,7 @@
   background: rgba(247, 245, 252, 0.96);
   border-left: 1px solid $color-border;
   @include glass(12px);
-  box-shadow: $shadow-xl;
+  // box-shadow: $shadow-xl;
   transform: translateX(100%);
   transition: transform $transition-slow;
 
@@ -319,6 +319,12 @@
   margin-top: 1px;
 }
 
+.contextChunkBody {
+  @include flex(column, flex-start, flex-start, $space-2);
+  flex: 1;
+  min-width: 0;
+}
+
 .contextChunkText {
   font-size: $font-size-xs;
   color: $color-text-secondary;
@@ -328,6 +334,20 @@
   -webkit-line-clamp: 6;
   line-clamp: 6;
   -webkit-box-orient: vertical;
+}
+
+.scoreTag {
+  display: inline-block;
+  padding: 2px $space-2;
+  border-radius: $radius-full;
+  font-size: 10px;
+  font-family: $font-mono;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  &.scoreHigh { background: rgba(34, 197, 94, 0.1); color: $color-success; }
+  &.scoreMid  { background: rgba(245, 158, 11, 0.1); color: $color-warning; }
+  &.scoreLow  { background: rgba(239, 68, 68, 0.1);  color: $color-error; }
 }
 
 // ─── Sources toggle button ────────────────────────────────────────────────────
@@ -688,7 +708,7 @@
   background: $color-surface;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  box-shadow: $shadow-md;
+  // box-shadow: $shadow-md;
   transition:
     border-color $transition-base,
     box-shadow $transition-base;
