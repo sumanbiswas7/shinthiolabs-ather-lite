@@ -8,10 +8,8 @@ const atherLogo = '/ather-logo.svg'
 const MAX_CHARS = 4000;
 
 const SUGGESTIONS = [
-  // 'Summarize key findings',
-  // 'Draft an HCP email',
-  // 'Analyze field data',
-  // 'Create a call plan',
+  'What are the side effects of metformin?',
+  'Can a pregnant take metformin?',
 ] as const;
 
 type Role = "user" | "ai";
@@ -89,7 +87,9 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
   const [history, setHistory] = useState<HistoryItem[]>(INITIAL_HISTORY);
   const [contextDocs, setContextDocs] = useState<string[]>([]);
   const [contextOpen, setContextOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<{ stop(): void } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -110,6 +110,71 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
   useEffect(() => {
     autoResize();
   }, [input]);
+
+  const playBeep = useCallback((type: 'start' | 'stop') => {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+      if (type === 'start') {
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.linearRampToValueAtTime(900, now + 0.12);
+      } else {
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.linearRampToValueAtTime(500, now + 0.12);
+      }
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.18);
+      osc.onended = () => ctx.close();
+    } catch {}
+  }, []);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+    playBeep('stop');
+  }, [playBeep]);
+
+  const toggleMic = useCallback(() => {
+    if (isListening) {
+      stopListening();
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognition: any = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let final = '';
+    recognition.onresult = (e: { results: SpeechRecognitionResultList; resultIndex: number }) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      setInput(final + interim);
+    };
+
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => { setIsListening(false); playBeep('stop'); };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+    playBeep('start');
+  }, [isListening, stopListening, playBeep]);
 
   useEffect(() => {
     exportRef.current = () => {
@@ -203,6 +268,8 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
     const text = input.trim();
     if (!text || text.length > MAX_CHARS) return;
 
+    if (isListening) stopListening();
+
     const userMsg: Message = { id: Date.now(), role: 'user', content: text, time: new Date() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
@@ -216,7 +283,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
     }
 
     streamResponse(text, messages);
-  }, [input, messages, activeChat, streamResponse]);
+  }, [input, messages, activeChat, isListening, stopListening, streamResponse]);
 
   useEffect(() => {
     if (activeChat === null) return;
@@ -452,9 +519,10 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
               />
               <div className={styles.inputActions}>
                 <button
-                  className={styles.micBtn}
-                  title="Voice input"
+                  className={`${styles.micBtn} ${isListening ? styles.micBtnActive : ""}`}
+                  title={isListening ? "Stop listening" : "Voice input"}
                   aria-label="Voice input"
+                  onClick={toggleMic}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>

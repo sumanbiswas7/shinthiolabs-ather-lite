@@ -748,6 +748,16 @@
     background: $color-hover-bg;
     color: $color-accent;
   }
+
+  &.micBtnActive {
+    color: $color-error;
+    animation: micPulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes micPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
 }
 
 .sendBtn {
