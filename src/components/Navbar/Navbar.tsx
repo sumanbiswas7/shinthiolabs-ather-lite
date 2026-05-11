@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from "react";
 import styles from "./Navbar.module.scss";
+import { useUpload } from "./useUpload";
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -9,34 +9,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuToggle, onExport }: NavbarProps) {
-  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
-  const [uploadLabel, setUploadLabel] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
-    setUploadState('uploading');
-    setUploadLabel(file.name);
-
-    const body = new FormData();
-    body.append('file', file);
-
-    try {
-      const res = await fetch('/api/upload', { method: 'POST', body });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Upload failed');
-      setUploadState('done');
-      setUploadLabel(`${file.name} — ${json.chunks} chunks`);
-    } catch (err) {
-      setUploadState('error');
-      setUploadLabel(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      setTimeout(() => setUploadState('idle'), 4000);
-    }
-  };
+  const { uploadState, uploadLabel, fileInputRef, handleFileChange, triggerPicker } = useUpload();
 
   return (
     <nav className={styles.nav}>
@@ -69,7 +42,7 @@ export default function Navbar({ onMenuToggle, onExport }: NavbarProps) {
         <button
           className={`${styles.iconBtn} ${uploadState === 'uploading' ? styles.iconBtnLoading : ''} ${uploadState === 'done' ? styles.iconBtnDone : ''} ${uploadState === 'error' ? styles.iconBtnError : ''}`}
           title="Upload PDF or CSV"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={triggerPicker}
           disabled={uploadState === 'uploading'}
         >
           {uploadState === 'uploading' ? (
