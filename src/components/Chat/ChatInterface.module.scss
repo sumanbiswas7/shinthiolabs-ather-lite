@@ -54,8 +54,9 @@
 }
 
 .sidebarHeader {
-  padding: $space-5 $space-5 $space-3;
+  padding: $space-4 $space-4 $space-3 $space-5;
   border-bottom: 1px solid $color-border;
+  @include flex(row, center, space-between);
 
   h3 {
     font-family: $font-inter;
@@ -65,6 +66,23 @@
     text-transform: uppercase;
     color: $color-text-muted;
   }
+}
+
+.newChatBtn {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-sm;
+  color: $color-text-muted;
+  transition: background $transition-base, color $transition-base;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-accent;
+  }
+
+  &:focus-visible { @include focus-ring; }
 }
 
 .historyList {

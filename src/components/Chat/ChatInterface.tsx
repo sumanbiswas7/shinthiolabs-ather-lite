@@ -14,20 +14,6 @@ const SUGGESTIONS = [
   // 'Create a call plan',
 ] as const;
 
-interface HistoryItem {
-  id: number;
-  title: string;
-  date: string;
-}
-
-const INITIAL_HISTORY: HistoryItem[] = [
-  { id: 1, title: "HCP engagement strategy Q2", date: "Today" },
-  { id: 2, title: "Patient support program review", date: "Yesterday" },
-  { id: 3, title: "Territory performance analysis", date: "Mon" },
-  { id: 4, title: "Marketing material compliance", date: "Mon" },
-  { id: 5, title: "KOL mapping northeast region", date: "Sun" },
-];
-
 type Role = "user" | "ai";
 
 interface Message {
@@ -36,6 +22,49 @@ interface Message {
   content: string;
   time: Date;
 }
+
+export interface HistoryItem {
+  id: number;
+  title: string;
+  date: string;
+  messages: Message[];
+}
+
+export const d = (h: number, m: number) => { const t = new Date('2026-05-11'); t.setHours(h, m, 0, 0); return t; };
+
+const INITIAL_HISTORY: HistoryItem[] = [
+  {
+    id: 1,
+    title: "Metformin & Paracetamol overview",
+    date: "Today",
+    messages: [
+      { id: 11, role: "user", content: "Tell me about metphormin", time: d(23, 0) },
+      { id: 12, role: "ai", content: "Metformin is an antihyperglycemic agent commonly used to improve glucose tolerance in patients with type 2 diabetes mellitus. It helps lower both basal and postprandial plasma glucose levels through several mechanisms:\n\n1. Decreases hepatic glucose production.\n2. Reduces intestinal absorption of glucose.\n3. Improves insulin sensitivity by increasing peripheral glucose uptake and utilization.\n\nMetformin hydrochloride tablets are available in strengths of 500 mg, 850 mg, and 1,000 mg. For more specific information on dosing or indications, please let me know!", time: d(23, 1) },
+      { id: 13, role: "user", content: "Tell me about paracetamol", time: d(23, 1) },
+      { id: 14, role: "ai", content: "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.", time: d(23, 1) },
+    ],
+  },
+  {
+    id: 2,
+    title: "Metformin in pregnancy",
+    date: "Today",
+    messages: [
+      { id: 21, role: "user", content: "Can a pregnant take metphormin?", time: d(23, 0) },
+      { id: 22, role: "ai", content: "Limited data with metformin hydrochloride tablets in pregnant women are not sufficient to determine a drug-associated risk for major birth defects or miscarriage. Published studies have not reported a clear association between metformin and major birth defects or miscarriage risk. However, there are risks to the mother and fetus associated with poorly controlled diabetes mellitus during pregnancy. It is important for pregnant individuals to talk with their healthcare provider about the best way to control blood sugar while pregnant.", time: d(23, 0) },
+    ],
+  },
+  {
+    id: 3,
+    title: "Metformin side effects",
+    date: "Today",
+    messages: [
+      { id: 31, role: "user", content: "what can u do?", time: d(22, 57) },
+      { id: 32, role: "ai", content: "I'm here to assist healthcare professionals by providing clinical information about medications, including details on dosing, efficacy, safety, and indications. If you have specific medical questions, feel free to ask!", time: d(22, 57) },
+      { id: 33, role: "user", content: "what are the side effects of metphormin?", time: d(22, 58) },
+      { id: 34, role: "ai", content: "The side effects of metformin hydrochloride tablets include:\n\n1. **Lactic Acidosis**: A rare but serious condition that can occur, causing a buildup of lactic acid in the blood. Symptoms may include feeling very weak and tired, unusual muscle pain, trouble breathing, unusual sleepiness, feeling cold, dizziness, or slow/irregular heartbeat. This condition is a medical emergency.\n\n2. **Metallic Taste**: About 3 out of every 100 people may experience an unpleasant metallic taste when starting the medication, which usually lasts for a short time.\n\n3. **Hypoglycemia**: While metformin rarely causes low blood sugar by itself, hypoglycemia can occur if a person does not eat enough, consumes alcohol, or takes other medications to lower blood sugar.\n\n4. Other common side effects may include gastrointestinal issues such as nausea, vomiting, and diarrhea.\n\nIf you experience serious side effects, this may require adverse event reporting and escalation to your pharmacovigilance team.", time: d(22, 58) },
+    ],
+  },
+];
 
 
 function formatTime(date: Date): string {
@@ -57,6 +86,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeChat, setActiveChat] = useState<number | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>(INITIAL_HISTORY);
   const [contextDocs, setContextDocs] = useState<string[]>([]);
   const [contextOpen, setContextOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -177,8 +207,23 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
+
+    if (activeChat === null) {
+      const newId = Date.now() + 1;
+      const title = text.length > 45 ? text.slice(0, 45) + '…' : text;
+      setHistory((prev) => [{ id: newId, title, date: 'Today', messages: [] }, ...prev]);
+      setActiveChat(newId);
+    }
+
     streamResponse(text, messages);
-  }, [input, messages, streamResponse]);
+  }, [input, messages, activeChat, streamResponse]);
+
+  useEffect(() => {
+    if (activeChat === null) return;
+    setHistory((prev) =>
+      prev.map((item) => (item.id === activeChat ? { ...item, messages } : item))
+    );
+  }, [messages, activeChat]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -210,14 +255,31 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarHeader}>
           <h3>Recent</h3>
+          <button
+            className={styles.newChatBtn}
+            title="New chat"
+            aria-label="New chat"
+            onClick={() => {
+              setMessages([]);
+              setActiveChat(null);
+              setContextDocs([]);
+              setContextOpen(false);
+              onSidebarClose();
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
         </div>
 
         <div className={styles.historyList}>
-          {INITIAL_HISTORY.map((item) => (
+          {history.map((item) => (
             <button
               key={item.id}
               className={`${styles.historyItem} ${activeChat === item.id ? styles.active : ""}`}
-              onClick={() => setActiveChat(item.id)}
+              onClick={() => { setActiveChat(item.id); setMessages(item.messages); setContextDocs([]); setContextOpen(false); }}
             >
               <span className={styles.historyIcon}>
                 <svg
