@@ -8,12 +8,19 @@
     "start": "next start"
   },
   "dependencies": {
+    "@chroma-core/default-embed": "^0.1.9",
+    "chromadb": "^2.4.6",
     "next": "^15.1.0",
+    "openai": "^4.77.0",
+    "papaparse": "^5.4.1",
+    "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/papaparse": "^5.3.15",
+    "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "sass": "^1.82.0",
