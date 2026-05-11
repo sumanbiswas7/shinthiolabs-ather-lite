@@ -1,6 +1,9 @@
+'use client'
+
 import { useState, useRef, useEffect, useCallback } from "react";
-import atherLogo from "../../assets/ather-logo.svg";
 import styles from "./ChatInterface.module.scss";
+
+const atherLogo = '/ather-logo.svg'
 
 const MAX_CHARS = 4000;
 

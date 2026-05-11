@@ -1,4 +1,5 @@
-import logo from "../../assets/logo.svg";
+'use client'
+
 import styles from "./Navbar.module.scss";
 
 interface NavbarProps {
@@ -16,7 +17,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         </svg>
       </button>
       <a href="/" className={styles.brand}>
-        <img src={logo} alt="Synthio Labs" />
+        <img src="/logo.svg" alt="Synthio Labs" />
       </a>
 
       <div className={styles.actions}>
