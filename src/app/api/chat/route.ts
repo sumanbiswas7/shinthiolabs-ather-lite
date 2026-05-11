@@ -33,7 +33,32 @@ Follow these 5 compliance rules strictly for all clinical responses:
 5. Consistent Answers
    If the same question is asked multiple times differently, your answer must remain stable, accurate, and compliant.
 
-Always prioritize: Safety > Helpfulness | Compliance > Completeness | Accuracy > Assumptions`
+Always prioritize: Safety > Helpfulness | Compliance > Completeness | Accuracy > Assumptions
+
+Set the structured output fields as follows:
+- confidence: "high" if the answer is fully supported by retrieved context, "medium" if partially supported, "low" if little or no relevant context was retrieved
+- sources_used: 1-based indices of which context chunks you actually referenced (empty array if none)
+- compliance_flags: include any triggered rules — "prescription_advice", "off_label", "adverse_event", "no_context"
+- requires_escalation: true only if a serious adverse event or urgent safety concern is present`
+
+// Hard-coded output validation — these patterns must never appear regardless of prompt
+const BLOCKED_PATTERNS: RegExp[] = [
+  /\byou should (prescribe|take|stop|switch|increase|decrease)\b/i,
+  /\b(prescribe|administer) .{0,30} to (your )?patient/i,
+  /\brecommended (dose|dosage|dosing) for you\b/i,
+  /\bstop (taking|using) .{0,30} immediately\b/i,
+]
+
+function validateOutput(answer: string): string[] {
+  const violations: string[] = []
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(answer)) {
+      violations.push('auto_blocked')
+      break
+    }
+  }
+  return violations
+}
 
 async function getQueryEmbedding(openai: OpenAI, text: string): Promise<number[]> {
   const { data } = await openai.embeddings.create({
@@ -69,7 +94,6 @@ export async function POST(req: NextRequest) {
       nResults: 4,
     })
     docs = (results.documents?.[0]?.filter(Boolean) ?? []) as string[]
-    // Convert L2 distances to 0–100 similarity scores (unit vectors: range [0,2])
     scores = (results.distances?.[0] ?? []).map((d) => Math.round((1 - d / 2) * 100))
     if (docs.length > 0) {
       contextBlock = `\n\nRelevant context from uploaded documents:\n${docs.map((d, i) => `[${i + 1}] ${d}`).join('\n\n')}`
@@ -84,27 +108,61 @@ export async function POST(req: NextRequest) {
     { role: 'user', content: message },
   ]
 
-  const stream = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages,
-    stream: true,
-    max_tokens: 1024,
-  })
+  // Structured output — model must return validated JSON schema
+  let answer = 'Something went wrong. Please try again.'
+  let confidence: 'high' | 'medium' | 'low' = 'low'
+  let flags: string[] = []
+  let escalate = false
 
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 1500,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'clinical_response',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              answer:               { type: 'string' },
+              confidence:           { type: 'string', enum: ['high', 'medium', 'low'] },
+              sources_used:         { type: 'array', items: { type: 'number' } },
+              compliance_flags:     { type: 'array', items: { type: 'string' } },
+              requires_escalation:  { type: 'boolean' },
+            },
+            required: ['answer', 'confidence', 'sources_used', 'compliance_flags', 'requires_escalation'],
+            additionalProperties: false,
+          },
+        },
+      },
+    })
+
+    const parsed = JSON.parse(response.choices[0].message.content ?? '{}')
+    answer      = parsed.answer ?? answer
+    confidence  = parsed.confidence ?? 'low'
+    flags       = parsed.compliance_flags ?? []
+    escalate    = parsed.requires_escalation ?? false
+
+    // Layer 2 — hard output validation (overrides model judgment)
+    const violations = validateOutput(answer)
+    if (violations.length > 0) {
+      flags = [...new Set([...flags, ...violations])]
+      answer = 'I cannot provide that type of recommendation. Please refer to the approved prescribing information directly.'
+    }
+  } catch (err) {
+    console.error('[chat] LLM error', err)
+  }
+
+  // Stream: header line + answer text
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        // First line: JSON metadata (docs + scores for the sources panel)
-        controller.enqueue(encoder.encode(JSON.stringify({ docs, scores }) + '\n'))
-        // Remaining bytes: raw token stream
-        for await (const chunk of stream) {
-          const text = chunk.choices[0]?.delta?.content ?? ''
-          if (text) controller.enqueue(encoder.encode(text))
-        }
-      } finally {
-        controller.close()
-      }
+    start(controller) {
+      controller.enqueue(encoder.encode(JSON.stringify({ docs, scores, confidence, flags, escalate }) + '\n'))
+      controller.enqueue(encoder.encode(answer))
+      controller.close()
     },
   })
 

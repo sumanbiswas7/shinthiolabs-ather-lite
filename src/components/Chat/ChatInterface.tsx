@@ -19,6 +19,9 @@ interface Message {
   role: Role;
   content: string;
   time: Date;
+  confidence?: 'high' | 'medium' | 'low';
+  flags?: string[];
+  escalate?: boolean;
 }
 
 export interface HistoryItem {
@@ -235,11 +238,18 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
             const header = lineBuffer.slice(0, nlIdx).trim();
             const rest = lineBuffer.slice(nlIdx + 1);
             try {
-              const { docs, scores } = JSON.parse(header) as { docs: string[]; scores: number[] };
+              const { docs, scores, confidence, flags, escalate } = JSON.parse(header) as {
+                docs: string[]; scores: number[];
+                confidence: 'high' | 'medium' | 'low';
+                flags: string[]; escalate: boolean;
+              };
               if (docs?.length) {
                 setContextChunks(docs.map((text, i) => ({ text, score: scores?.[i] ?? 0 })));
                 setContextOpen(true);
               }
+              setMessages((prev) => prev.map((m) =>
+                m.id === streamId ? { ...m, confidence, flags, escalate } : m
+              ));
             } catch {}
             if (rest) {
               accumulated += rest;
@@ -471,16 +481,38 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
                   {msg.role === "ai" && (
                     <div className={`${styles.avatar} ${styles.avatarAI}`} />
                   )}
-                  <div className={styles.bubble}>
-                    {msg.content.split("\n").map((line, i, arr) => (
-                      <span key={i}>
-                        {line}
-                        {i < arr.length - 1 && <br />}
-                      </span>
-                    ))}
-                    <div className={styles.messageTime}>
-                      {formatTime(msg.time)}
+                  <div className={styles.bubbleWrapper}>
+                    <div className={styles.bubble}>
+                      {msg.content.split("\n").map((line, i, arr) => (
+                        <span key={i}>
+                          {line}
+                          {i < arr.length - 1 && <br />}
+                        </span>
+                      ))}
+                      <div className={styles.messageTime}>
+                        {formatTime(msg.time)}
+                      </div>
                     </div>
+                    {msg.role === "ai" && msg.confidence && (
+                      <div className={styles.messageMeta}>
+                        <span className={`${styles.confidenceBadge} ${styles[`confidence_${msg.confidence}`]}`}>
+                          {msg.confidence === 'high' ? '● High confidence' : msg.confidence === 'medium' ? '◐ Medium confidence' : '○ Low confidence'}
+                        </span>
+                        {msg.flags && msg.flags.filter(f => f !== 'auto_blocked').map(flag => (
+                          <span key={flag} className={styles.complianceFlag}>{flag.replace(/_/g, ' ')}</span>
+                        ))}
+                      </div>
+                    )}
+                    {msg.role === "ai" && msg.escalate && (
+                      <div className={styles.escalationBanner}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                          <line x1="12" y1="9" x2="12" y2="13"/>
+                          <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        Potential adverse event — escalate to your pharmacovigilance team
+                      </div>
+                    )}
                   </div>
                   {msg.role === "user" && (
                     <div className={`${styles.avatar} ${styles.avatarUser}`}>
