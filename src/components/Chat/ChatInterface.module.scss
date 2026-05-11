@@ -1,0 +1,634 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+.layout {
+  display: grid;
+  grid-template-columns: $sidebar-width 1fr;
+  grid-template-rows: 1fr;
+  padding-top: $nav-height;
+  height: 100dvh;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.backdrop {
+  display: none;
+
+  @include mobile {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 9, 23, 0.45);
+    z-index: $z-overlay - 1;
+  }
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+.sidebar {
+  @include flex(column, stretch, flex-start);
+  background: rgba(247, 245, 252, 0.7);
+  border-right: 1px solid $color-border;
+  overflow: hidden;
+  @include glass(8px);
+
+  @include mobile {
+    position: fixed;
+    top: $nav-height;
+    left: 0;
+    bottom: 0;
+    width: $sidebar-width;
+    z-index: $z-overlay;
+    transform: translateX(-100%);
+    transition: transform $transition-slow;
+    box-shadow: $shadow-xl;
+  }
+}
+
+.sidebarOpen {
+  @include mobile {
+    transform: translateX(0);
+  }
+}
+
+.sidebarHeader {
+  padding: $space-5 $space-5 $space-3;
+  border-bottom: 1px solid $color-border;
+
+  h3 {
+    font-family: $font-inter;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: $letter-spacing-widest;
+    text-transform: uppercase;
+    color: $color-text-muted;
+  }
+}
+
+.historyList {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-3 $space-2;
+  @include scrollbar-thin;
+}
+
+.historyItem {
+  @include button-reset;
+  @include flex(row, center, flex-start, $space-3);
+  width: 100%;
+  padding: $space-3 $space-3;
+  border-radius: $radius-md;
+  transition: background $transition-base;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  line-height: $line-height-snug;
+  text-align: left;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-text-primary;
+  }
+
+  &.active {
+    background: $color-active-bg;
+    color: $color-accent;
+    font-weight: $font-weight-medium;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.historyIcon {
+  flex-shrink: 0;
+  color: $color-text-muted;
+
+  .active & {
+    color: $color-accent;
+  }
+}
+
+.historyText {
+  @include truncate;
+  flex: 1;
+}
+
+.historyDate {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.sidebarFooter {
+  padding: $space-4 $space-5;
+  border-top: 1px solid $color-border;
+  @include flex(row, center, space-between);
+}
+
+.modelBadge {
+  @include flex(row, center, flex-start, $space-2);
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  font-family: $font-inter;
+
+  span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: $radius-full;
+    background: $color-success;
+    flex-shrink: 0;
+  }
+}
+
+// ─── Mobile header ───────────────────────────────────────────────────────────
+.mobileHeader {
+  display: none;
+
+  @include mobile {
+    @include flex(row, center, flex-start, $space-3);
+    padding: $space-3 $space-4;
+    border-bottom: 1px solid $color-border;
+    background: rgba(240, 237, 248, 0.82);
+    @include glass(16px);
+    flex-shrink: 0;
+  }
+}
+
+.menuBtn {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-sm;
+  color: $color-text-secondary;
+  transition:
+    background $transition-base,
+    color $transition-base;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-text-primary;
+  }
+}
+
+.mobileTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  font-family: $font-mono;
+  letter-spacing: $letter-spacing-wide;
+}
+
+// ─── Main Chat Area ───────────────────────────────────────────────────────────
+.main {
+  @include flex(column, stretch, flex-start);
+  overflow: hidden;
+  background: $color-bg;
+  position: relative;
+}
+
+// ─── Messages ────────────────────────────────────────────────────────────────
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: $space-8 $space-6 $space-6;
+  @include scrollbar-thin;
+
+  @include mobile {
+    padding: $space-4 $space-4 $space-4;
+  }
+}
+
+.messagesInner {
+  max-width: $content-max-w;
+  margin: 0 auto;
+  @include flex(column, stretch, flex-start, $space-6);
+}
+
+// ─── Empty / Welcome state ───────────────────────────────────────────────────
+.welcome {
+  @include flex(column, center, center, $space-6);
+  flex: 1;
+  padding: $space-16 $space-8;
+  text-align: center;
+
+  @include mobile {
+    padding: $space-8 $space-5;
+    gap: $space-4;
+  }
+}
+
+.welcomeOrb {
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+}
+
+.welcomeHeading {
+  @include flex(column, center, center, $space-3);
+}
+
+.welcomeTitle {
+  @include flex(column, center, center, $space-1);
+  font-family: $font-sans;
+  font-size: clamp(2.5rem, 5vw, 3rem);
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-tight;
+  line-height: $line-height-tight;
+  color: $color-text-primary;
+}
+
+.welcomeAccent {
+  @include flex(row, center, center, $space-2);
+  font-family: $font-serif;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-style: italic;
+  font-weight: 400;
+  color: $color-accent;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.welcomeAccentMark {
+  font-style: normal;
+  font-size: 0.6em;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.welcomeSub {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  max-width: 380px;
+  line-height: $line-height-relaxed;
+
+  @include mobile {
+    font-size: $font-size-sm;
+    max-width: 100%;
+  }
+}
+
+.welcomeCta {
+  @include flex(row, center, center);
+  border-radius: $radius-full;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: $shadow-md;
+  transition:
+    box-shadow $transition-base,
+    transform $transition-fast;
+  user-select: none;
+
+  &:hover {
+    box-shadow: $shadow-lg;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.welcomeCtaLabel {
+  background: $color-text-primary;
+  color: $color-text-inverse;
+  padding: 0 $space-6;
+  height: 48px;
+  @include flex(row, center, center);
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  letter-spacing: $letter-spacing-wider;
+  text-transform: uppercase;
+}
+
+.welcomeCtaArrow {
+  background: $color-surface;
+  color: $color-text-primary;
+  width: 48px;
+  height: 48px;
+  @include flex(row, center, center);
+  font-size: $font-size-lg;
+  border-left: 1px solid $color-border;
+}
+
+.suggestions {
+  @include flex(row, center, center, $space-3);
+  flex-wrap: wrap;
+  margin-top: $space-2;
+}
+
+.suggestion {
+  @include button-reset;
+  padding: $space-2 $space-4;
+  border: 1px solid $color-border;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: $color-surface;
+  transition: all $transition-base;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-accent;
+    color: $color-accent;
+    background: $color-accent-light;
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ─── Message Bubbles ─────────────────────────────────────────────────────────
+.messageGroup {
+  @include flex(column, stretch, flex-start, $space-1);
+}
+
+.messageRow {
+  @include flex(row, flex-end, flex-start, $space-3);
+
+  &.user {
+    flex-direction: row-reverse;
+  }
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+  @include flex(row, center, center);
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.avatarAI {
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255, 255, 255, 0.55) 0%,
+      transparent 50%
+    ),
+    radial-gradient(circle at 70% 75%, #a78bfa 0%, transparent 50%),
+    radial-gradient(circle at 30% 70%, #818cf8 0%, transparent 55%),
+    linear-gradient(135deg, #93c5fd 0%, #818cf8 40%, #a78bfa 100%);
+  box-shadow:
+    0 2px 8px rgba(129, 140, 248, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.avatarUser {
+  background: $color-text-primary;
+  color: $color-text-inverse;
+}
+
+.bubble {
+  max-width: 75%;
+  padding: $space-3 $space-4;
+  border-radius: $radius-xl;
+  font-size: $font-size-base;
+  line-height: $line-height-relaxed;
+
+  @include mobile {
+    max-width: 90%;
+    font-size: $font-size-sm;
+  }
+
+  .user & {
+    background: $color-bubble-user;
+    color: $color-bubble-user-text;
+    border-bottom-right-radius: $radius-sm;
+  }
+
+  .ai & {
+    background: $color-bubble-ai;
+    color: $color-bubble-ai-text;
+    border-bottom-left-radius: $radius-sm;
+    border: 1px solid $color-border;
+    box-shadow: $shadow-xs;
+  }
+}
+
+.bubbleCode {
+  font-family: $font-mono;
+  font-size: $font-size-sm;
+  background: $color-surface-alt;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: $space-3 $space-4;
+  overflow-x: auto;
+  @include scrollbar-thin;
+  color: $color-text-primary;
+
+  .user & {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.messageTime {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  padding: 0 $space-2;
+  font-family: $font-mono;
+
+  .user & {
+    text-align: right;
+  }
+}
+
+// ─── Typing indicator ────────────────────────────────────────────────────────
+.typing {
+  @include flex(row, center, flex-start, $space-1);
+  padding: $space-3 $space-4;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-xl;
+  border-bottom-left-radius: $radius-sm;
+  width: fit-content;
+  box-shadow: $shadow-xs;
+
+  span {
+    width: 5px;
+    height: 5px;
+    border-radius: $radius-full;
+    background: $color-text-muted;
+    animation: bounce 1.2s ease-in-out infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+  }
+}
+
+@keyframes bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+// ─── Input area ──────────────────────────────────────────────────────────────
+.inputArea {
+  padding: $space-4 $space-6 $space-6;
+  background: linear-gradient(to top, $color-bg 70%, transparent);
+
+  @include mobile {
+    padding: $space-3 $space-3 $space-4;
+  }
+}
+
+.inputWrap {
+  max-width: $content-max-w;
+  margin: 0 auto;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  transition:
+    border-color $transition-base,
+    box-shadow $transition-base;
+  overflow: hidden;
+
+  &:focus-within {
+    border-color: $color-accent;
+    box-shadow:
+      $shadow-md,
+      0 0 0 3px $color-accent-light;
+  }
+}
+
+.inputRow {
+  @include flex(row, flex-end, flex-start, $space-2);
+  padding: $space-3 $space-3 $space-3 $space-5;
+}
+
+.textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font-family: $font-inter;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+  padding: $space-2 0;
+  min-height: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+  @include scrollbar-thin;
+
+  &::placeholder {
+    color: $color-text-muted;
+  }
+}
+
+.inputActions {
+  @include flex(row, center, flex-end, $space-2);
+  flex-shrink: 0;
+}
+
+.attachBtn {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-md;
+  color: $color-text-muted;
+  transition:
+    background $transition-base,
+    color $transition-base;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-accent;
+  }
+}
+
+.sendBtn {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-md;
+  background: $color-text-primary;
+  color: $color-text-inverse;
+  transition:
+    background $transition-base,
+    transform $transition-fast,
+    opacity $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $color-accent;
+    transform: scale(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.inputFooter {
+  @include flex(row, center, space-between);
+  padding: $space-2 $space-5 $space-3;
+  border-top: 1px solid $color-border;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.inputHint {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  font-family: $font-mono;
+
+  kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    background: $color-bg-elevated;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+}
+
+.charCount {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  font-family: $font-mono;
+
+  &.near {
+    color: $color-warning;
+  }
+  &.over {
+    color: $color-error;
+  }
+}

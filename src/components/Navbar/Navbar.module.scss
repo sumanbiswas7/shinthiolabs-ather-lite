@@ -1,0 +1,92 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $nav-height;
+  z-index: $z-nav;
+  @include flex(row, center, space-between);
+  padding: 0 $space-6;
+  background: rgba(240, 237, 248, 0.82);
+  border-bottom: 1px solid $color-border;
+  @include glass(16px);
+
+  @include mobile {
+    padding: 0 $space-4;
+  }
+}
+
+.menuBtn {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-sm;
+  color: $color-text-secondary;
+  transition: background $transition-base, color $transition-base;
+  display: none;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-text-primary;
+  }
+
+  @include mobile {
+    display: flex;
+  }
+}
+
+.brand {
+  @include flex(row, center, flex-start, $space-3);
+  text-decoration: none;
+  color: $color-text-primary;
+
+  img {
+    height: 28px;
+    width: auto;
+  }
+}
+
+.actions {
+  @include flex(row, center, flex-end, $space-3);
+}
+
+.newChat {
+  @include button-reset;
+  @include flex(row, center, center, $space-2);
+  height: 36px;
+  padding: 0 $space-4;
+  background: $color-text-primary;
+  color: $color-text-inverse;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  letter-spacing: $letter-spacing-wider;
+  text-transform: uppercase;
+  transition: background $transition-base, transform $transition-fast;
+
+  &:hover { opacity: 0.88; }
+  &:active { transform: scale(0.97); }
+
+  svg { flex-shrink: 0; }
+}
+
+.iconBtn {
+  @include button-reset;
+  @include flex(row, center, center);
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-sm;
+  color: $color-text-secondary;
+  transition: background $transition-base, color $transition-base;
+
+  &:hover {
+    background: $color-hover-bg;
+    color: $color-accent;
+  }
+
+  &:focus-visible { @include focus-ring; }
+}

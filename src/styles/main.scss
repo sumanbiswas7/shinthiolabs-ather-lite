@@ -1,0 +1,112 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+// ─── CSS Custom Properties (runtime tokens) ──────────────────────────────────
+:root {
+  --color-bg:              #{$color-bg};
+  --color-bg-elevated:     #{$color-bg-elevated};
+  --color-surface:         #{$color-surface};
+  --color-surface-alt:     #{$color-surface-alt};
+  --color-text-primary:    #{$color-text-primary};
+  --color-text-secondary:  #{$color-text-secondary};
+  --color-text-muted:      #{$color-text-muted};
+  --color-text-inverse:    #{$color-text-inverse};
+  --color-accent:          #{$color-accent};
+  --color-accent-hover:    #{$color-accent-hover};
+  --color-accent-light:    #{$color-accent-light};
+  --color-navy:            #{$color-navy};
+  --color-border:          #{$color-border};
+  --color-border-strong:   #{$color-border-strong};
+  --nav-height:            #{$nav-height};
+  --sidebar-width:         #{$sidebar-width};
+}
+
+// ─── Reset ───────────────────────────────────────────────────────────────────
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: $font-inter;
+  font-size: $font-size-base;
+  font-weight: $font-weight-regular;
+  color: $color-text-primary;
+  background-color: $color-bg;
+  line-height: $line-height-normal;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Typography ──────────────────────────────────────────────────────────────
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-sans;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  letter-spacing: $letter-spacing-tight;
+  color: $color-text-primary;
+}
+
+h1 { font-size: $font-size-3xl; }
+h2 { font-size: $font-size-2xl; }
+h3 { font-size: $font-size-xl; }
+h4 { font-size: $font-size-lg; }
+
+p {
+  color: $color-text-secondary;
+  line-height: $line-height-relaxed;
+}
+
+code, pre, kbd {
+  font-family: $font-mono;
+  font-size: 0.9em;
+}
+
+pre {
+  background: $color-navy;
+  color: #E8E6FF;
+  padding: $space-4;
+  border-radius: $radius-md;
+  overflow-x: auto;
+  @include scrollbar-thin;
+}
+
+a {
+  color: $color-accent;
+  text-decoration: none;
+  transition: color $transition-base;
+  &:hover { color: $color-accent-hover; }
+}
+
+img, svg { display: block; max-width: 100%; }
+
+button, input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
