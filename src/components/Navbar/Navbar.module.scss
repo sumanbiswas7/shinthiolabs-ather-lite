@@ -126,6 +126,63 @@
   }
 }
 
+.uploadWrapper {
+  position: relative;
+
+  &:hover .uploadTooltip {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+.uploadTooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  @include flex(row, center, flex-start, $space-2);
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: $space-3 $space-4;
+  white-space: nowrap;
+  box-shadow: $shadow-md;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity $transition-base, transform $transition-base;
+  pointer-events: none;
+  z-index: $z-overlay;
+}
+
+.tooltipArrowUp {
+  position: absolute;
+  top: -5px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background: $color-surface;
+  border-left: 1px solid $color-border;
+  border-top: 1px solid $color-border;
+  transform: rotate(45deg);
+}
+
+.tooltipStep {
+  @include flex(row, center, flex-start, 6px);
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+
+  svg {
+    flex-shrink: 0;
+    color: $color-accent;
+  }
+}
+
+.tooltipDivider {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  padding: 0 2px;
+}
+
 .spinnerIcon {
   animation: spin 0.8s linear infinite;
 }
