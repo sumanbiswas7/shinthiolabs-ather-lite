@@ -9,8 +9,8 @@ const atherLogo = '/ather-logo.svg'
 const MAX_CHARS = 4000
 
 const SUGGESTIONS = [
-  'What are the side effects of metformin?',
-  'Is Amlodipine 15g per day dose good?'
+  'Side effects of metformin?',
+  'Can I take Amlodipine with Metformin?',
 ] as const
 
 interface ChatInterfaceProps {
@@ -184,7 +184,7 @@ export default function ChatInterface({ sidebarOpen, onSidebarClose, exportRef }
                   </p>
                 </div>
                 <p className={styles.welcomeSub}>
-                  Clinical-grade answers across efficacy, safety, dosing, MOA and access — with the depth of a scientific exchange.
+                  Clinical-grade answers across efficacy, safety, dosing, MOA and access — ask me about Metformin and Amlodipine.
                 </p>
                 <div className={styles.suggestions}>
                   {SUGGESTIONS.map((s) => (

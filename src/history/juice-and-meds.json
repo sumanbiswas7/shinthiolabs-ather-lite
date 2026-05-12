@@ -1,0 +1,48 @@
+{
+  "exported_at": "2026-05-12T04:11:57.845Z",
+  "messages": [
+    {
+      "id": 1778558937277,
+      "role": "user",
+      "content": "Can I take metformin with orange juice",
+      "time": "2026-05-12T04:08:57.277Z"
+    },
+    {
+      "id": 1778558937278,
+      "role": "ai",
+      "content": "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.",
+      "time": "2026-05-12T04:09:03.922Z",
+      "confidence": "low",
+      "flags": ["no_context"],
+      "escalate": false
+    },
+    {
+      "id": 1778558976757,
+      "role": "user",
+      "content": "Can I take amlodipine with orange juice",
+      "time": "2026-05-12T04:09:36.757Z"
+    },
+    {
+      "id": 1778558976758,
+      "role": "ai",
+      "content": "Yes, you Can take amlodipine with most drinks, including orange juice. It is important to note, however, that you should avoid grapefruit or grapefruit juice while taking amlodipine, as it may increase the medication's effects.",
+      "time": "2026-05-12T04:09:42.541Z",
+      "confidence": "high",
+      "escalate": false
+    },
+    {
+      "id": 1778559093832,
+      "role": "user",
+      "content": "Can i take paracetamol with grapefruit juice?",
+      "time": "2026-05-12T04:11:33.832Z"
+    },
+    {
+      "id": 1778559093833,
+      "role": "ai",
+      "content": "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.",
+      "time": "2026-05-12T04:11:51.536Z",
+      "confidence": "low",
+      "escalate": false
+    }
+  ]
+}

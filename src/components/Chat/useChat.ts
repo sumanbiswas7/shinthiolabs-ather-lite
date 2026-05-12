@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import juiceAndMeds from '../../history/juice-and-meds.json'
+import pregnancyAndMeds from '../../history/pregnancy-and-meds.json'
+import tellMeAboutMeds from '../../history/tell-me-about-meds.json'
 
 export type Role = 'user' | 'ai'
 
@@ -19,45 +22,42 @@ export interface HistoryItem {
   messages: Message[]
 }
 
-const d = (h: number, m: number) => {
-  const t = new Date('2026-05-11')
-  t.setHours(h, m, 0, 0)
-  return t
+type RawExport = {
+  exported_at: string
+  messages: Array<{
+    id: number
+    role: 'user' | 'ai'
+    content: string
+    time: string
+    confidence?: 'high' | 'medium' | 'low'
+    flags?: string[]
+    escalate?: boolean
+  }>
 }
 
-const INITIAL_HISTORY: HistoryItem[] = [
-  {
-    id: 1,
-    title: 'Metformin & Paracetamol overview',
-    date: 'Today',
-    messages: [
-      { id: 11, role: 'user', content: 'Tell me about metphormin', time: d(23, 0) },
-      { id: 12, role: 'ai', content: 'Metformin is an antihyperglycemic agent commonly used to improve glucose tolerance in patients with type 2 diabetes mellitus. It helps lower both basal and postprandial plasma glucose levels through several mechanisms:\n\n1. Decreases hepatic glucose production.\n2. Reduces intestinal absorption of glucose.\n3. Improves insulin sensitivity by increasing peripheral glucose uptake and utilization.\n\nMetformin hydrochloride tablets are available in strengths of 500 mg, 850 mg, and 1,000 mg. For more specific information on dosing or indications, please let me know!', time: d(23, 1) },
-      { id: 13, role: 'user', content: 'Tell me about paracetamol', time: d(23, 1) },
-      { id: 14, role: 'ai', content: "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.", time: d(23, 1) },
-    ],
-  },
-  {
-    id: 2,
-    title: 'Metformin in pregnancy',
-    date: 'Today',
-    messages: [
-      { id: 21, role: 'user', content: 'Can a pregnant take metphormin?', time: d(23, 0) },
-      { id: 22, role: 'ai', content: 'Limited data with metformin hydrochloride tablets in pregnant women are not sufficient to determine a drug-associated risk for major birth defects or miscarriage. Published studies have not reported a clear association between metformin and major birth defects or miscarriage risk. However, there are risks to the mother and fetus associated with poorly controlled diabetes mellitus during pregnancy. It is important for pregnant individuals to talk with their healthcare provider about the best way to control blood sugar while pregnant.', time: d(23, 0) },
-    ],
-  },
-  {
-    id: 3,
-    title: 'Metformin side effects',
-    date: 'Today',
-    messages: [
-      { id: 31, role: 'user', content: 'what can u do?', time: d(22, 57) },
-      { id: 32, role: 'ai', content: "I'm here to assist healthcare professionals by providing clinical information about medications, including details on dosing, efficacy, safety, and indications. If you have specific medical questions, feel free to ask!", time: d(22, 57) },
-      { id: 33, role: 'user', content: 'what are the side effects of metphormin?', time: d(22, 58) },
-      { id: 34, role: 'ai', content: 'The side effects of metformin hydrochloride tablets include:\n\n1. **Lactic Acidosis**: A rare but serious condition that can occur, causing a buildup of lactic acid in the blood. Symptoms may include feeling very weak and tired, unusual muscle pain, trouble breathing, unusual sleepiness, feeling cold, dizziness, or slow/irregular heartbeat. This condition is a medical emergency.\n\n2. **Metallic Taste**: About 3 out of every 100 people may experience an unpleasant metallic taste when starting the medication, which usually lasts for a short time.\n\n3. **Hypoglycemia**: While metformin rarely causes low blood sugar by itself, hypoglycemia can occur if a person does not eat enough, consumes alcohol, or takes other medications to lower blood sugar.\n\n4. Other common side effects may include gastrointestinal issues such as nausea, vomiting, and diarrhea.\n\nIf you experience serious side effects, this may require adverse event reporting and escalation to your pharmacovigilance team.', time: d(22, 58) },
-    ],
-  },
-]
+function toHistoryItem(raw: RawExport, id: number): HistoryItem {
+  const firstUser = raw.messages.find((m) => m.role === 'user')
+  const raw_title = firstUser?.content ?? 'Chat'
+  const title = raw_title.length > 42 ? raw_title.slice(0, 42) + '…' : raw_title
+
+  const exportedAt = new Date(raw.exported_at)
+  const today = new Date()
+  const date =
+    exportedAt.toDateString() === today.toDateString()
+      ? 'Today'
+      : exportedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+  return {
+    id,
+    title,
+    date,
+    messages: raw.messages.map((m) => ({ ...m, time: new Date(m.time) })),
+  }
+}
+
+const INITIAL_HISTORY: HistoryItem[] = [juiceAndMeds, pregnancyAndMeds, tellMeAboutMeds]
+  .sort((a, b) => new Date(b.exported_at).getTime() - new Date(a.exported_at).getTime())
+  .map((raw, i) => toHistoryItem(raw as RawExport, i + 1))
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })

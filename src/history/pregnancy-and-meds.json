@@ -1,0 +1,47 @@
+{
+  "exported_at": "2026-05-12T04:17:39.036Z",
+  "messages": [
+    {
+      "id": 1778559364868,
+      "role": "user",
+      "content": "Can a pregnant take metphormin?",
+      "time": "2026-05-12T04:16:04.868Z"
+    },
+    {
+      "id": 1778559364870,
+      "role": "ai",
+      "content": "Metformin should only be used in pregnancy if the potential benefits to the mother and fetus outweigh the risks of harm. Limited data with metformin in pregnant women are insufficient to determine a drug-associated risk for major birth defects or miscarriage. Studies have not reported a clear association with metformin and major birth defect or miscarriage risk. However, effects on the mother and fetus must be considered carefully. It is advisable for pregnant women to consult their healthcare provider about the best way to control blood sugar while pregnant.",
+      "time": "2026-05-12T04:16:13.929Z",
+      "confidence": "high",
+      "escalate": false
+    },
+    {
+      "id": 1778559404874,
+      "role": "user",
+      "content": "Can a pregnant take amlodipine?",
+      "time": "2026-05-12T04:16:44.874Z"
+    },
+    {
+      "id": 1778559404875,
+      "role": "ai",
+      "content": "Amlodipine should be used during pregnancy only if the potential benefit justifies the potential risk to the fetus. There are no adequate and well-controlled studies in pregnant women to assess the safety of amlodipine during pregnancy.",
+      "time": "2026-05-12T04:16:51.808Z",
+      "confidence": "high",
+      "escalate": false
+    },
+    {
+      "id": 1778559444828,
+      "role": "user",
+      "content": "Can a pregnant take pacimol?",
+      "time": "2026-05-12T04:17:24.828Z"
+    },
+    {
+      "id": 1778559444829,
+      "role": "ai",
+      "content": "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.",
+      "time": "2026-05-12T04:17:31.129Z",
+      "confidence": "low",
+      "escalate": false
+    }
+  ]
+}

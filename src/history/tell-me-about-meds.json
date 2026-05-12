@@ -1,0 +1,49 @@
+{
+  "exported_at": "2026-05-12T04:14:55.907Z",
+  "messages": [
+    {
+      "id": 1778559229999,
+      "role": "user",
+      "content": "Tell me about metformin",
+      "time": "2026-05-12T04:13:49.999Z"
+    },
+    {
+      "id": 1778559230000,
+      "role": "ai",
+      "content": "Metformin hydrochloride tablets are indicated as an adjunct to diet and exercise to improve glycemic control in adults and pediatric patients 10 years of age and older with type 2 diabetes mellitus. It is available in strengths of 500 mg, 850 mg, and 1,000 mg. \n\n**Dosage**: The starting dose for adults is typically 500 mg orally twice a day or 850 mg once a day with meals. The dose may be increased in increments of 500 mg weekly or 850 mg every two weeks, up to a maximum of 2,550 mg per day given in divided doses. For pediatric patients, the starting dose is the same, with a maximum of 2,000 mg per day.\n\n**Warnings and Precautions**: It is important to assess renal function prior to initiation, especially since metformin should not be used in patients with an eGFR below 30 mL/min/1.73 m. Risks of lactic acidosis are also associated with metformin, particularly if renal impairment or hemodynamic instability is present. Patients may experience adverse reactions such as diarrhea, nausea/vomiting, and flatulence.\n\n**Cautions**: Patients should be informed about the potential for hypoglycemia, particularly when metformin is taken with insulin or insulin secretagogues. Regular monitoring of hematological parameters and vitamin B levels is also advisable as metformin may decrease these levels.",
+      "time": "2026-05-12T04:14:04.589Z",
+      "confidence": "high",
+      "escalate": false
+    },
+    {
+      "id": 1778559255785,
+      "role": "user",
+      "content": "Tell me about paracetamol",
+      "time": "2026-05-12T04:14:15.785Z"
+    },
+    {
+      "id": 1778559255786,
+      "role": "ai",
+      "content": "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.",
+      "time": "2026-05-12T04:14:23.328Z",
+      "confidence": "low",
+      "flags": ["no_context"],
+      "escalate": false
+    },
+    {
+      "id": 1778559281465,
+      "role": "user",
+      "content": "I know that you know about paracetamol please search the web and tell me",
+      "time": "2026-05-12T04:14:41.465Z"
+    },
+    {
+      "id": 1778559281466,
+      "role": "ai",
+      "content": "I don't have approved information for that in the uploaded documents. Please upload the relevant medical document and ask again.",
+      "time": "2026-05-12T04:14:48.112Z",
+      "confidence": "low",
+      "flags": ["no_context"],
+      "escalate": false
+    }
+  ]
+}
