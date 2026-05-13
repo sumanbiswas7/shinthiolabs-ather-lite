@@ -32,6 +32,22 @@ These regex patterns are checked against every model response. A match replaces 
 | `recommended (dose\|dosage\|dosing) for you` | Personalised dosing recommendations |
 | `stop (taking\|using) ... immediately` | Unsolicited discontinuation advice |
 
+## Scaling to 5,000 users
+
+The vector DB (Chroma Cloud) and LLM (OpenAI) are already hosted — the main bottlenecks at scale are the app layer and the upload pipeline.
+
+**App servers** — already handled. Vercel scales Next.js serverless functions automatically.
+
+**File uploads** — stream files to S3 before processing instead of holding them in memory. Vercel functions have a 1 GB RAM cap — parsing large PDFs in memory across concurrent uploads will crash the function.
+
+**Embedding queue** — wrap the upload pipeline in a job queue (BullMQ + Redis). Embedding 100+ chunks per upload is slow; offload it to a worker so the HTTP response returns immediately.
+
+**OpenAI rate limits** — at 5k users you'll hit TPM/RPM limits fast. Add per-user request throttling and exponential backoff on 429s.
+
+**Caching** — cache embeddings for identical query strings (Redis, 1h TTL). Repeat queries (same drug name, same question) are common in medical workflows.
+
+**Auth + tenancy** — right now there's no login and all uploads go into one shared Chroma collection. Add auth (Auth.js or Clerk) and give each organisation its own collection so their documents stay isolated from other users' data.
+
 ## Stack
 
 | Layer | Tech |
@@ -39,6 +55,6 @@ These regex patterns are checked against every model response. A match replaces 
 | Frontend | Next.js 15 + TypeScript |
 | Styling | SCSS Modules |
 | Embeddings | OpenAI `text-embedding-3-small` |
-| Vector DB | Chroma |
+| Vector DB | Chroma Cloud |
 | LLM | OpenAI GPT-4o |
 | Voice input | Web Speech API (browser-native) |
